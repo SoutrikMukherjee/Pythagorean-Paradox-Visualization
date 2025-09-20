@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Line Segment Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .visualization-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        canvas {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.3));
+            cursor: crosshair;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn.accent {
+            background: linear-gradient(45deg, #ffe66d, #ff9500);
+            box-shadow: 0 4px 15px rgba(255, 230, 109, 0.3);
+        }
+
+        .btn.accent:hover {
+            box-shadow: 0 6px 20px rgba(255, 230, 109, 0.4);
+        }
+
+        .mathematical-info {
+            margin-bottom: 25px;
+        }
+
+        .mathematical-info h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .equation {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 3px solid #ffd700;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        .result-display {
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(78, 205, 196, 0.5);
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .btn {
+                font-size: 12px;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Mathematical Visualization</h1>
+            <p>Exploring Common Divisors Through Line Segment Analysis - A Tool for Mathematical Education</p>
+        </div>
+
+        <div class="main-content">
+            <div class="visualization-panel">
+                <canvas id="canvas" width="800" height="400"></canvas>
+                <div class="controls">
+                    <button class="btn" onclick="setXY(1)">XY = 1 inch</button>
+                    <button class="btn secondary" onclick="setXY(2)">XY = 2 inches</button>
+                    <button class="btn accent" onclick="toggleAnimation()">Animate</button>
+                    <button class="btn" onclick="toggleDivisions()">Toggle Divisions</button>
+                    <button class="btn secondary" onclick="showStepByStep()">Step-by-Step</button>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(45deg, #ff6b6b, #ee5a52);"></div>
+                        <span>Line AB: 36 inches</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(45deg, #4ecdc4, #44a08d);"></div>
+                        <span>Line CD: 10 inches</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(45deg, #ffe66d, #ff9500);"></div>
+                        <span>Line XY: Variable length</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="mathematical-info">
+                    <h3>Mathematical Problem</h3>
+                    <p>Find the length of line segment XY such that:</p>
+                    <div class="equation">
+                        m × XY = 36 inches<br>
+                        n × XY = 10 inches<br>
+                        where m, n ∈ ℤ⁺
+                    </div>
+                    
+                    <h3>Solution Process</h3>
+                    <p>XY must be a common divisor of both 36 and 10.</p>
+                    <div class="equation">
+                        GCD(36, 10) = 2<br>
+                        Divisors of 36: 1, 2, 3, 4, 6, 9, 12, 18, 36<br>
+                        Divisors of 10: 1, 2, 5, 10<br>
+                        Common divisors: <strong>1, 2</strong>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    <h4>Current Analysis</h4>
+                    <p><strong>XY Length:</strong> <span id="currentXY">2</span> inches</p>
+                    <p><strong>Segments in AB:</strong> <span id="segmentsAB">18</span></p>
+                    <p><strong>Segments in CD:</strong> <span id="segmentsCD">5</span></p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
+                    </div>
+                    <p id="validationText">✓ Valid solution: Both divisions result in whole numbers</p>
+                </div>
+
+                <div class="mathematical-info">
+                    <h3>Educational Value</h3>
+                    <p>This visualization helps students understand:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Greatest Common Divisor (GCD)</li>
+                        <li>Factor relationships</li>
+                        <li>Division and remainders</li>
+                        <li>Constraint satisfaction</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let currentXY = 2;
+        let showDivisions = false;
+        let isAnimating = false;
+        let animationId = null;
+        let stepMode = false;
+        
+        const scale = 8;
+        const margin = 50;
+
+        function drawGradientLine(x1, y1, x2, y2, color1, color2, width = 6) {
+            const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            // Draw enhanced endpoints
+            const endpointGradient = ctx.createRadialGradient(x1, y1, 0, x1, y1, 8);
+            endpointGradient.addColorStop(0, color1);
+            endpointGradient.addColorStop(1, color2);
+            
+            ctx.fillStyle = endpointGradient;
+            ctx.beginPath();
+            ctx.arc(x1, y1, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(x2, y2, 8, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function drawLabel(x, y, text, color = '#ffffff') {
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add text shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillText(text, x + 1, y + 1);
+            ctx.fillStyle = color;
+            ctx.fillText(text, x, y);
+        }
+
+        function drawDivisionMarks(x, y, length, divisions, color) {
+            if (!showDivisions) return;
+            
+            const segmentLength = (length * scale) / divisions;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            
+            for (let i = 1; i < divisions; i++) {
+                const markX = x + i * segmentLength;
+                ctx.beginPath();
+                ctx.moveTo(markX, y - 15);
+                ctx.lineTo(markX, y + 15);
+                ctx.stroke();
+                
+                // Add number labels
+                ctx.fillStyle = color;
+                ctx.font = '12px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(i.toString(), markX, y - 25);
+            }
+        }
+
+        function drawPulsingEffect(x, y, radius, color) {
+            const time = Date.now() * 0.003;
+            const pulseRadius = radius + Math.sin(time) * 3;
+            
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, pulseRadius);
+            gradient.addColorStop(0, color + '40');
+            gradient.addColorStop(1, color + '00');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, pulseRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw subtle grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Line AB (36 inches)
+            const abX1 = margin;
+            const abY = 120;
+            const abX2 = abX1 + 36 * scale;
+            
+            drawGradientLine(abX1, abY, abX2, abY, '#ff6b6b', '#ee5a52');
+            drawLabel(abX1 - 25, abY, 'A', '#ff6b6b');
+            drawLabel(abX2 + 25, abY, 'B', '#ff6b6b');
+            drawLabel((abX1 + abX2) / 2, abY - 35, '36 inches', '#ff6b6b');
+            drawDivisionMarks(abX1, abY, 36, 36 / currentXY, '#ff6b6b');
+
+            // Line CD (10 inches)
+            const cdX1 = margin;
+            const cdY = 220;
+            const cdX2 = cdX1 + 10 * scale;
+            
+            drawGradientLine(cdX1, cdY, cdX2, cdY, '#4ecdc4', '#44a08d');
+            drawLabel(cdX1 - 25, cdY, 'C', '#4ecdc4');
+            drawLabel(cdX2 + 25, cdY, 'D', '#4ecdc4');
+            drawLabel((cdX1 + cdX2) / 2, cdY - 35, '10 inches', '#4ecdc4');
+            drawDivisionMarks(cdX1, cdY, 10, 10 / currentXY, '#4ecdc4');
+
+            // Line XY (variable)
+            const xyX1 = margin;
+            const xyY = 320;
+            const xyX2 = xyX1 + currentXY * scale;
+            
+            drawGradientLine(xyX1, xyY, xyX2, xyY, '#ffe66d', '#ff9500');
+            drawLabel(xyX1 - 25, xyY, 'X', '#ffe66d');
+            drawLabel(xyX2 + 25, xyY, 'Y', '#ffe66d');
+            drawLabel((xyX1 + xyX2) / 2, xyY - 35, `${currentXY} inch${currentXY > 1 ? 'es' : ''}`, '#ffe66d');
+
+            // Add pulsing effects
+            if (isAnimating) {
+                drawPulsingEffect(xyX1, xyY, 20, '#ffe66d');
+                drawPulsingEffect(xyX2, xyY, 20, '#ffe66d');
+            }
+
+            // Mathematical verification
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = '14px Segoe UI';
+            ctx.textAlign = 'left';
+            const startX = 450;
+            const startY = 150;
+            
+            ctx.fillText(`Mathematical Verification:`, startX, startY);
+            ctx.fillText(`m = 36 ÷ ${currentXY} = ${36 / currentXY}`, startX, startY + 30);
+            ctx.fillText(`n = 10 ÷ ${currentXY} = ${10 / currentXY}`, startX, startY + 50);
+            
+            const isValid = (36 % currentXY === 0) && (10 % currentXY === 0);
+            ctx.fillStyle = isValid ? '#4ecdc4' : '#ff6b6b';
+            ctx.fillText(`Result: ${isValid ? 'Valid ✓' : 'Invalid ✗'}`, startX, startY + 80);
+
+            // Update UI
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('currentXY').textContent = currentXY;
+            document.getElementById('segmentsAB').textContent = 36 / currentXY;
+            document.getElementById('segmentsCD').textContent = 10 / currentXY;
+            
+            const isValid = (36 % currentXY === 0) && (10 % currentXY === 0);
+            const validationText = document.getElementById('validationText');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (isValid) {
+                validationText.textContent = '✓ Valid solution: Both divisions result in whole numbers';
+                validationText.style.color = '#4ecdc4';
+                progressFill.style.width = '100%';
+            } else {
+                validationText.textContent = '✗ Invalid: Divisions do not result in whole numbers';
+                validationText.style.color = '#ff6b6b';
+                progressFill.style.width = '0%';
+            }
+        }
+
+        function setXY(length) {
+            currentXY = length;
+            draw();
+        }
+
+        function toggleDivisions() {
+            showDivisions = !showDivisions;
+            draw();
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            
+            if (isAnimating) {
+                let frame = 0;
+                function animate() {
+                    if (!isAnimating) return;
+                    
+                    frame++;
+                    if (frame % 120 === 0) {
+                        currentXY = currentXY === 1 ? 2 : 1;
+                    }
+                    
+                    draw();
+                    animationId = requestAnimationFrame(animate);
+                }
+                animate();
+            } else {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            }
+        }
+
+        function showStepByStep() {
+            stepMode = !stepMode;
+            if (stepMode) {
+                alert(`Step-by-step analysis:
+
+1. We need XY to divide both 36 and 10 evenly
+2. Find factors of 36: 1, 2, 3, 4, 6, 9, 12, 18, 36
+3. Find factors of 10: 1, 2, 5, 10
+4. Common factors: 1, 2
+5. Therefore XY can only be 1 or 2 inches
+
+This demonstrates the concept of Greatest Common Divisor (GCD) visually!`);
+            }
+        }
+
+        // Interactive canvas events
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if click is near XY line
+            if (y > 300 && y < 340 && x > margin && x < margin + 100) {
+                currentXY = currentXY === 1 ? 2 : 1;
+                draw();
+            }
+        });
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
